@@ -2,7 +2,7 @@ import React from 'react';
 
 const Header: React.FC = () => {
   return (
-    <header className="bg-white shadow-md">
+    <header className="bg-slate-800 shadow-md">
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center space-x-4">
           <div className="bg-indigo-600 p-3 rounded-lg text-white">
@@ -11,8 +11,8 @@ const Header: React.FC = () => {
             </svg>
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-slate-800">Penetapan Generator</h1>
-            <p className="text-slate-500 mt-1">Buat Dokumen Pengadilan Resmi dengan Mudah</p>
+            <h1 className="text-3xl font-bold text-slate-100">Penetapan Generator</h1>
+            <p className="text-slate-400 mt-1">Buat Dokumen Pengadilan Resmi dengan Mudah</p>
           </div>
         </div>
       </div>

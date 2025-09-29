@@ -48,13 +48,22 @@ export interface PenetapanData {
   alamatKuasa?: string;
   tanggalSuratKuasa?: string;
 
-  // Substansi Dokumen
+  // Substansi Dokumen (Untuk Penetapan/Surat)
   membaca: MembacaOptions;
   menimbang: string;
   mengingat: string;
   menetapkan: string;
   tembusan: string;
   
+  // Detail Berita Acara
+  namaJurusita?: string;
+  pihakHadir?: string;
+  isiBeritaAcara?: string;
+  namaSaksi1?: string;
+  namaSaksi2?: string;
+  tanggalSidangBerikutnya?: string;
+  waktuSidangBerikutnya?: string;
+
   // Lain-lain
   isProdeo: boolean;
 }

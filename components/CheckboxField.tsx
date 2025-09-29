@@ -20,11 +20,11 @@ const CheckboxField: React.FC<CheckboxFieldProps> = ({ id, name, label, checked,
           checked={checked}
           onChange={onChange}
           disabled={disabled}
-          className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-4 w-4 rounded border-slate-500 bg-slate-700 text-indigo-600 focus:ring-indigo-600 focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
       <div className="ml-3 text-sm leading-6">
-        <label htmlFor={id} className={`font-medium text-slate-900 ${disabled ? 'text-slate-400' : ''}`}>
+        <label htmlFor={id} className={`font-medium ${disabled ? 'text-slate-500' : 'text-slate-300'}`}>
           {label}
         </label>
       </div>

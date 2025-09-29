@@ -19,9 +19,29 @@ import saveAs from 'file-saver';
 
 const formatDate = (dateString: string) => {
     if (!dateString) return '';
-    // 'id-ID' locale naturally formats as dd/mm/yyyy
-    return new Date(dateString).toLocaleDateString('id-ID');
+    // This is used by existing templates, ensure it's safe. It produces DD/MM/YYYY
+    const date = new Date(dateString + 'T00:00:00');
+    return date.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
 };
+
+const formatDateFull = (dateString: string) => {
+    if (!dateString) return { dayName: '________', formattedDate: '______________________' };
+    const date = new Date(dateString + 'T00:00:00'); // Treat as local time to avoid timezone issues
+    const dayName = date.toLocaleDateString('id-ID', { weekday: 'long' });
+    const formattedDate = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    return { dayName, formattedDate };
+};
+
+const formatDateSimple = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString + 'T00:00:00');
+    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+};
+
 
 export const exportToDocx = (text: string, fileName: string) => {
   const lines = text.split('\n');
@@ -94,6 +114,7 @@ export const exportToDocx = (text: string, fileName: string) => {
         const name = partyMatch[1].trim();
         const role = partyMatch[2];
         p = new Paragraph({
+            style: "default",
             alignment: AlignmentType.CENTER,
             children: [
                 new TextRun({ text: name, bold: true }),
@@ -105,6 +126,7 @@ export const exportToDocx = (text: string, fileName: string) => {
     }
     else if (['Lawan', 'MELAWAN'].includes(trimmedLine)) {
         p = new Paragraph({
+            style: "default",
             alignment: AlignmentType.CENTER,
             children: [new TextRun({ text: trimmedLine, bold: true })]
         });
@@ -133,7 +155,7 @@ export const exportToDocx = (text: string, fileName: string) => {
       if (trimmedLine.startsWith('PENGADILAN NEGERI') && i === 0) {
         alignment = AlignmentType.CENTER;
         allCaps = true;
-      } else if (trimmedLine === 'PENETAPAN') {
+      } else if (['PENETAPAN', 'BERITA ACARA TEGURAN (AANMANING)'].includes(trimmedLine)) {
         alignment = AlignmentType.CENTER;
         bold = true;
         allCaps = true;
@@ -142,7 +164,7 @@ export const exportToDocx = (text: string, fileName: string) => {
       } else if (trimmedLine === 'DEMI KEADILAN BERDASARKAN KETUHANAN YANG MAHA ESA') {
         alignment = AlignmentType.CENTER;
         allCaps = true;
-      } else if (['SETELAH MEMBACA:', 'MENIMBANG:'].includes(trimmedLine)) {
+      } else if (['SETELAH MEMBACA:', 'MENIMBANG:', 'MEMBERIKAN TEGURAN/AANMANING KEPADA:', 'Atas permintaan dari:'].includes(trimmedLine)) {
         bold = true;
         allCaps = true;
       } else if (trimmedLine === 'MENETAPKAN:') {
@@ -187,7 +209,7 @@ export const exportToDocx = (text: string, fileName: string) => {
                   new TextRun({
                       children: [PageNumber.CURRENT],
                       font: "Arial",
-                      size: 20, // 10pt
+                      size: 24, // 12pt
                   }),
               ],
           }),
@@ -252,6 +274,66 @@ export const exportToDocx = (text: string, fileName: string) => {
 };
 
 export const generatePenetapanText = async (data: PenetapanData): Promise<string> => {
+  if (data.jenisDokumen === 'Berita Acara' && data.jenisBeritaAcara === 'Berita Acara Aanmaning') {
+    const fullCourtName = data.courtName.split('(')[0].trim();
+    const courtCity = fullCourtName.replace(/Pengadilan Negeri/i, '').trim();
+
+    const allNomorJo = [data.nomorPerkara, data.nomorPutusanPertama, data.nomorPutusanBanding, data.nomorPutusanKasasi, data.nomorPutusanPK].filter(Boolean);
+    const fullNomorString = allNomorJo.map((nomor, index) => index === 0 ? `Nomor ${nomor}` : `jo. Nomor ${nomor}`).join(' ');
+    
+    const { dayName: determinationDayName, formattedDate: formattedDeterminationDate } = formatDateFull(data.determinationDate);
+    const { dayName: nextHearingDayName, formattedDate: formattedNextHearingDate } = formatDateFull(data.tanggalSidangBerikutnya);
+    const nextHearingTime = data.waktuSidangBerikutnya ? data.waktuSidangBerikutnya.substring(0, 5) : '10:00';
+
+    const pemohonIdentity = data.namaKuasa 
+        ? `${data.namaKuasa}, beralamat di ${data.alamatKuasa || '[Alamat Kuasa]'}, selaku kuasa dari ${data.pemohonEksekusi}, beralamat di ${data.alamatPemohonEksekusi || '[Alamat Pemohon Eksekusi]'}, berdasarkan Surat Kuasa tanggal ${formatDateSimple(data.tanggalSuratKuasa)}, semula selaku PENGGUGAT, sekarang disebut sebagai PEMOHON EKSEKUSI;`
+        : `${data.pemohonEksekusi}, beralamat di ${data.alamatPemohonEksekusi || '[Alamat Pemohon Eksekusi]'}, semula selaku PENGGUGAT, sekarang disebut sebagai PEMOHON EKSEKUSI;`;
+        
+    const termohonIdentity = `${data.termohonEksekusi}, beralamat di ${data.alamatTermohonEksekusi || '[Alamat Termohon Eksekusi]'}, semula selaku TERGUGAT, sekarang disebut sebagai TERMOHON EKSEKUSI;`;
+
+    const defaultIsiBeritaAcara = `Tentang permohonan eksekusi atas dasar: putusan pengadilan yang berkekuatan hukum tetap (inkraacht);
+
+Kemudian Ketua Pengadilan Negeri ${courtCity} memanggil Kuasa Termohon Eksekusi untuk diberikan teguran/aanmaning agar dalam tenggang waktu 8 (delapan) hari setelah ditegur untuk segera melaksanakan isi melaksanakan Putusan Pengadilan Negeri ${courtCity} tanggal ${formatDateSimple(data.tanggalPutusanPertama)}, Nomor ${data.nomorPutusanPertama};
+
+Dan atas peneguran tersebut, Kuasa Termohon Eksekusi menyatakan bersedia melaksanakan isi putusan tersebut dalam tenggang waktu yang diperintahkan undang-undang tersebut, yang rencananya akan dilakukan pembayaran secara transfer melalui rekening Pengadilan Negeri ${courtCity} untuk selanjutnya diserahkan kepada Pemohon Eksekusi;
+
+Kemudian Ketua Pengadilan Negeri ${courtCity} menyarankan agar pelaksanaan isi putusan tersebut dilakukan langsung kepada Pemohon Eksekusi secara tunai dihadapan Ketua Pengadilan agar selanjutnya dibuatkan berita acara pelaksanaan putusan secara sukarela;
+
+Dan atas saran tersebut, Kuasa Termohon Eksekusi menyatakan bersedia melaksanakan isi putusan tersebut dalam waktu 7 (tujuh) hari dan dilaksanakan di Pengadilan Negeri ${courtCity};
+
+Setelah tidak ada lagi yang disampaikan, Ketua Pengadilan Negeri ${courtCity} memerintahkan agar para pihak hadir kembali tanpa dilakukan pemanggilan di Pengadilan Negeri ${courtCity}, pada:`;
+    
+    const isiBeritaAcaraContent = data.isiBeritaAcara || defaultIsiBeritaAcara;
+
+    const template = `
+BERITA ACARA TEGURAN (AANMANING)
+${fullNomorString}
+
+Pada hari ini: ${determinationDayName}, tanggal: ${formattedDeterminationDate}, oleh saya: ${data.judgeName}, Ketua ${fullCourtName}, bertempat di Gedung Kantor Pengadilan Negeri tersebut, telah:
+
+MEMBERIKAN TEGURAN/AANMANING KEPADA:
+${termohonIdentity}
+
+Atas permintaan dari:
+${pemohonIdentity}
+
+${isiBeritaAcaraContent}
+
+Hari ${nextHearingDayName}, Tanggal ${formattedNextHearingDate}, pukul ${nextHearingTime} WIB
+
+Demikian Berita Acara ini dibuat dan ditandatangani oleh kami, ${data.judgeName}, Ketua ${fullCourtName} dibantu oleh ${data.clerkName}, Panitera Pengadilan Negeri tersebut.
+
+
+Plh. Panitera,[TAB]Ketua Pengadilan Negeri ${courtCity},[TAB]
+
+
+
+
+${data.clerkName},[TAB]${data.judgeName}[TAB]
+    `;
+    return template.trim().replace(/^\s+/gm, '');
+  }
+
   // =================================================================
   // TEMPLATE KHUSUS UNTUK PENETAPAN AANMANING
   // =================================================================
@@ -370,7 +452,7 @@ export const generatePenetapanText = async (data: PenetapanData): Promise<string
       - Bagi Termohon Eksekusi guna ditegur agar dalam tenggang waktu 8 (delapan) hari setelah ditegur untuk segera melaksanakan putusan ${putusanJoString};
       - Menyatakan bahwa mengenai biaya yang timbul sebagai akibat permohonan ini dibebankan kepada Pemohon Eksekusi;
 
-      DEMIKIANLAH, ditetapkan di ${courtCity} pada tanggal ${formatDate(data.determinationDate)}.
+      DEMIKIANLAH, ditetapkan di ${courtCity} pada tanggal ${formatDateSimple(data.determinationDate)}.
 
 
 
@@ -486,8 +568,8 @@ export const generatePenetapanText = async (data: PenetapanData): Promise<string
     - Jenis Perkara: ${data.jenisPerkara}
     - Nomor Perkara: ${data.nomorPerkara}
     - Tanggal Dokumen: ${formatDate(data.determinationDate)}
-    - Hakim Tunggal: ${data.judgeName}
-    - Panitera Pengganti: ${data.clerkName}
+    - Hakim/Ketua: ${data.judgeName}
+    - Panitera: ${data.clerkName}
     - Permohonan Prodeo: ${data.isProdeo ? 'Ya' : 'Tidak'}
 
     PARA PIHAK:
@@ -505,6 +587,14 @@ export const generatePenetapanText = async (data: PenetapanData): Promise<string
 
     ${riwayatPerkaraSection}
 
+    ${data.jenisDokumen === 'Berita Acara' ? `
+    DETAIL BERITA ACARA:
+    - Jurusita/Pejabat: ${data.namaJurusita || '[Belum diisi]'}
+    - Pihak yang Hadir: ${data.pihakHadir || '[Belum diisi]'}
+    - Isi/Jalannya Acara: ${data.isiBeritaAcara || '[Belum diisi]'}
+    - Saksi 1: ${data.namaSaksi1 || '[Tidak ada]'}
+    - Saksi 2: ${data.namaSaksi2 || '[Tidak ada]'}
+    ` : `
     SUBSTANSI DOKUMEN:
     
     ${membacaSection}
@@ -516,16 +606,18 @@ export const generatePenetapanText = async (data: PenetapanData): Promise<string
     ${data.mengingat || '[Sebutkan pasal-pasal dari peraturan perundang-undangan yang menjadi dasar]'}
 
     MENETAPKAN:
-    ${data.menetapkan || '[Tuliskan amar putusan secara jelas dan terperinci]'}
+    ${data.menetapkan || '[Tuliskan amar penetapan secara jelas dan terperinci]'}
 
     ${tembusanSection}
+    `}
 
     INSTRUKSI:
     1.  Susun informasi di atas menjadi sebuah dokumen ${data.jenisDokumen} yang lengkap dan koheren.
     2.  Jika jenis penetapan atau berita acara spesifik (misal: Berita Acara Aanmaning), sesuaikan judul dan isi dokumen agar relevan.
     3.  Pastikan semua bagian (kop, judul, identitas, isi, penutup) tersusun dengan benar.
     4.  Untuk Penetapan, sertakan frasa "DEMI KEADILAN BERDASARKAN KETUHANAN YANG MAHA ESA".
-    5.  Hasilkan teks lengkap untuk dokumen final.
+    5.  Jika jenis dokumen adalah "Berita Acara", susun drafnya dengan format standar berita acara (pembukaan, isi, penutup, tanda tangan pejabat dan saksi-saksi).
+    6.  Hasilkan teks lengkap untuk dokumen final.
   `;
 
   try {
