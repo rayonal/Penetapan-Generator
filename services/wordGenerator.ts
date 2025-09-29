@@ -291,7 +291,7 @@ export const generatePenetapanText = async (data: PenetapanData): Promise<string
         
     const termohonIdentity = `${data.termohonEksekusi}, beralamat di ${data.alamatTermohonEksekusi || '[Alamat Termohon Eksekusi]'}, semula selaku TERGUGAT, sekarang disebut sebagai TERMOHON EKSEKUSI;`;
 
-    const defaultIsiBeritaAcara = `Tentang permohonan eksekusi atas dasar: putusan pengadilan yang berkekuatan hukum tetap (inkraacht);
+    const defaultIsiBeritaAcaraBody = `Tentang permohonan eksekusi atas dasar: putusan pengadilan yang berkekuatan hukum tetap (inkraacht);
 
 Kemudian Ketua Pengadilan Negeri ${courtCity} memanggil Kuasa Termohon Eksekusi untuk diberikan teguran/aanmaning agar dalam tenggang waktu 8 (delapan) hari setelah ditegur untuk segera melaksanakan isi melaksanakan Putusan Pengadilan Negeri ${courtCity} tanggal ${formatDateSimple(data.tanggalPutusanPertama)}, Nomor ${data.nomorPutusanPertama};
 
@@ -299,11 +299,16 @@ Dan atas peneguran tersebut, Kuasa Termohon Eksekusi menyatakan bersedia melaksa
 
 Kemudian Ketua Pengadilan Negeri ${courtCity} menyarankan agar pelaksanaan isi putusan tersebut dilakukan langsung kepada Pemohon Eksekusi secara tunai dihadapan Ketua Pengadilan agar selanjutnya dibuatkan berita acara pelaksanaan putusan secara sukarela;
 
-Dan atas saran tersebut, Kuasa Termohon Eksekusi menyatakan bersedia melaksanakan isi putusan tersebut dalam waktu 7 (tujuh) hari dan dilaksanakan di Pengadilan Negeri ${courtCity};
-
-Setelah tidak ada lagi yang disampaikan, Ketua Pengadilan Negeri ${courtCity} memerintahkan agar para pihak hadir kembali tanpa dilakukan pemanggilan di Pengadilan Negeri ${courtCity}, pada:`;
+Dan atas saran tersebut, Kuasa Termohon Eksekusi menyatakan bersedia melaksanakan isi putusan tersebut dalam waktu 7 (tujuh) hari dan dilaksanakan di Pengadilan Negeri ${courtCity};`;
     
-    const isiBeritaAcaraContent = data.isiBeritaAcara || defaultIsiBeritaAcara;
+    const isiBeritaAcaraContent = data.isiBeritaAcara || defaultIsiBeritaAcaraBody;
+
+    let concludingSection = '';
+    if (data.aanmaningSelesai) {
+      concludingSection = `Setelah tidak ada lagi yang disampaikan, dan oleh karena Termohon Eksekusi telah berjanji akan melaksanakan isi putusan secara sukarela, maka proses teguran (aanmaning) ini dinyatakan selesai.`;
+    } else {
+      concludingSection = `Setelah tidak ada lagi yang disampaikan, Ketua Pengadilan Negeri ${courtCity} memerintahkan agar para pihak hadir kembali tanpa dilakukan pemanggilan di Pengadilan Negeri ${courtCity}, pada:\n\nHari ${nextHearingDayName}, Tanggal ${formattedNextHearingDate}, pukul ${nextHearingTime} WIB`;
+    }
 
     const template = `
 BERITA ACARA TEGURAN (AANMANING)
@@ -319,7 +324,7 @@ ${pemohonIdentity}
 
 ${isiBeritaAcaraContent}
 
-Hari ${nextHearingDayName}, Tanggal ${formattedNextHearingDate}, pukul ${nextHearingTime} WIB
+${concludingSection}
 
 Demikian Berita Acara ini dibuat dan ditandatangani oleh kami, ${data.judgeName}, Ketua ${fullCourtName} dibantu oleh ${data.clerkName}, Panitera Pengadilan Negeri tersebut.
 

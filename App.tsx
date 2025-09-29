@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import InputField from './components/InputField';
 import TextAreaField from './components/TextAreaField';
@@ -64,6 +64,7 @@ function App() {
     namaSaksi2: '',
     tanggalSidangBerikutnya: '',
     waktuSidangBerikutnya: '10:00',
+    aanmaningSelesai: false,
     isProdeo: false,
   });
 
@@ -71,6 +72,22 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isParsingPdf, setIsParsingPdf] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Automatically set next hearing date for Aanmaning BA, if not marked as finished
+    if (formData.jenisBeritaAcara === 'Berita Acara Aanmaning' && formData.determinationDate && !formData.aanmaningSelesai) {
+      const date = new Date(formData.determinationDate);
+      date.setDate(date.getDate() + 7);
+      const nextHearingDate = date.toISOString().split('T')[0];
+      if (formData.tanggalSidangBerikutnya !== nextHearingDate) {
+        setFormData(prev => ({
+          ...prev,
+          tanggalSidangBerikutnya: nextHearingDate
+        }));
+      }
+    }
+  }, [formData.determinationDate, formData.jenisBeritaAcara, formData.aanmaningSelesai]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -387,8 +404,11 @@ function App() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {formData.jenisBeritaAcara === 'Berita Acara Aanmaning' ? (
                             <>
-                                <InputField id="tanggalSidangBerikutnya" name="tanggalSidangBerikutnya" label="Tanggal Sidang Berikutnya" type="date" value={formData.tanggalSidangBerikutnya!} onChange={handleChange} required />
-                                <InputField id="waktuSidangBerikutnya" name="waktuSidangBerikutnya" label="Waktu Sidang Berikutnya" type="time" value={formData.waktuSidangBerikutnya!} onChange={handleChange} required />
+                                <div className="md:col-span-2">
+                                  <CheckboxField id="aanmaningSelesai" name="aanmaningSelesai" label="Aanmaning Selesai" checked={!!formData.aanmaningSelesai} onChange={handleChange} />
+                                </div>
+                                <InputField id="tanggalSidangBerikutnya" name="tanggalSidangBerikutnya" label="Tanggal Sidang Berikutnya" type="date" value={formData.tanggalSidangBerikutnya!} onChange={handleChange} required disabled={!!formData.aanmaningSelesai} />
+                                <InputField id="waktuSidangBerikutnya" name="waktuSidangBerikutnya" label="Waktu Sidang Berikutnya" type="time" value={formData.waktuSidangBerikutnya!} onChange={handleChange} required disabled={!!formData.aanmaningSelesai} />
                                 <div className="md:col-span-2">
                                   <TextAreaField id="isiBeritaAcara" name="isiBeritaAcara" label="Isi/Jalannya Berita Acara (Opsional)" value={formData.isiBeritaAcara!} onChange={handleChange} rows={6} placeholder="Kosongkan untuk menggunakan narasi default sesuai template."/>
                                 </div>

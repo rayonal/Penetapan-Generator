@@ -63,6 +63,7 @@ export interface PenetapanData {
   namaSaksi2?: string;
   tanggalSidangBerikutnya?: string;
   waktuSidangBerikutnya?: string;
+  aanmaningSelesai?: boolean;
 
   // Lain-lain
   isProdeo: boolean;
