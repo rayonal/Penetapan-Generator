@@ -1,0 +1,5 @@
+{
+  "name": "Penetapan Generator",
+  "description": "A web application to generate official determination letters (Surat Penetapan) from a web form and export them as a Word (.docx) file.",
+  "requestFramePermissions": []
+}

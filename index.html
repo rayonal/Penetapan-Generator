@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Penetapan Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Dependencies are now loaded via importmap -->
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "docx": "https://unpkg.com/docx@8.5.0/build/index.mjs",
+    "file-saver": "https://esm.sh/file-saver@2.0.5",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.21.0",
+    "pdfjs-dist/build/pdf.mjs": "https://unpkg.com/pdfjs-dist@4.5.136/build/pdf.mjs",
+    "pdfjs-dist/build/pdf.worker.mjs": "https://unpkg.com/pdfjs-dist@4.5.136/build/pdf.worker.mjs",
+    "pdfjs-dist/": "https://aistudiocdn.com/pdfjs-dist@^5.4.149/"
+  }
+}
+</script>
+  </head>
+  <body class="bg-slate-100">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
