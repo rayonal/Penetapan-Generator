@@ -20,7 +20,7 @@ const CheckboxField: React.FC<CheckboxFieldProps> = ({ id, name, label, checked,
           checked={checked}
           onChange={onChange}
           disabled={disabled}
-          className="h-4 w-4 rounded border-slate-500 bg-slate-700 text-indigo-600 focus:ring-indigo-600 focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-4 w-4 rounded border-slate-600 bg-slate-800/50 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
       <div className="ml-3 text-sm leading-6">
